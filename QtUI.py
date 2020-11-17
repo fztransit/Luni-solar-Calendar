@@ -16,7 +16,7 @@ class GUI(QMainWindow):
 		self.setCentralWidget(self.wnlWidget)
 		self.calendarUI()
 
-		today(self)
+		displayDate(self)
 		self.show()
 
 	def calendarUI(self):
@@ -70,7 +70,7 @@ class GUI(QMainWindow):
 		self.hlayWNL.addWidget(self.btnNextMonth)
 		self.hlayWNL.addStretch()
 		self.btnToday = QPushButton("今日")
-		self.btnToday.clicked.connect(lambda : today(self))
+		self.btnToday.clicked.connect(lambda : displayDate(self))
 		self.btnToday.setMaximumWidth(36)
 		self.hlayWNL.addWidget(self.btnToday)
 		self.labMonday = Label("一")

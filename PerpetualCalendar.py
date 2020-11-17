@@ -223,6 +223,11 @@ def displayDate(ui):
 	if ui.sender() in [None, ui.btnToday]:  # 设为今日
 		year, month, day = time.localtime(time.time())[0:3]
 		month -= 1
+		year, month, day = time.localtime(time.time())[0:3]
+		ui.cblCentury.setCurrentIndex(-start_century + year // 100)
+		ui.cblYear.setCurrentIndex(year % 100)
+		ui.cblMonth.setCurrentIndex(month % 12)
+		displayMonth(ui)
 		borderDate(ui, month, day)
 	else:
 		if ui.sender() in [ui.cblCentury, ui.cblYear, ui.cblMonth, ui.btnLastMonth, ui.btnNextMonth, ui.btnLastYear, ui.btnNextYear]:  # 设为原公历日
@@ -263,11 +268,3 @@ def displayDate(ui):
 	ui.labInfo.setText("JDN {}<br/><br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
 		jdn, nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))  # JDN、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
 
-
-def today(ui):
-	year, month, day = time.localtime(time.time())[0:3]
-	ui.cblCentury.setCurrentIndex(-start_century + year // 100)
-	ui.cblYear.setCurrentIndex(year % 100)
-	ui.cblMonth.setCurrentIndex(month % 12 - 1)
-	displayMonth(ui)
-	displayDate(ui)
