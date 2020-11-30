@@ -111,6 +111,7 @@ def getFestival(m, d, sl):
 	else:  # 农历节日
 		if d == m: d = '初一'
 		festivals = lcfestivals
+
 	for i in range(len(festivals)):
 		if m == festivals[i][0] and d == festivals[i][1]:
 			return festivals[i][2]
@@ -151,6 +152,8 @@ def displayMonth(ui):
 		shuoJD = shuoJD[:-2] + shuoJD1[:3]
 	jqb = getSolorTerms(year)
 	days[1] = 29 if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0 else 28
+	fesDay = 0
+	flag = True
 	for i in range(12):
 		if i == month:
 			ysJD = ephem.julian_date((year, i + 1))
@@ -210,8 +213,8 @@ def displayMonth(ui):
 							if fes: ui.labs[j][k].setText(font(day, 20, "red", 800) + font(fes, 12, "red"))
 						if year > 1911:  # 农历节日起始年
 							fes = getFestival(ymb[yx], rq, 1)
-							if fes: ui.labs[j][k].setText(font(day, 20, "red", 800) + font(fes, 12, "red"))
-	return year, month
+							if fes:	ui.labs[j][k].setText(font(day, 20, "red", 800) + font(fes, 12, "red"))
+	return year, month, fesDay
 
 
 def displayDate(ui):
@@ -223,7 +226,6 @@ def displayDate(ui):
 	if ui.sender() in [None, ui.btnToday]:  # 设为今日
 		year, month, day = time.localtime(time.time())[0:3]
 		month -= 1
-		year, month, day = time.localtime(time.time())[0:3]
 		ui.cblCentury.setCurrentIndex(-start_century + year // 100)
 		ui.cblYear.setCurrentIndex(year % 100)
 		ui.cblMonth.setCurrentIndex(month % 12)
@@ -231,7 +233,7 @@ def displayDate(ui):
 		borderDate(ui, month, day)
 	else:
 		if ui.sender() in [ui.cblCentury, ui.cblYear, ui.cblMonth, ui.btnLastMonth, ui.btnNextMonth, ui.btnLastYear, ui.btnNextYear]:  # 设为原公历日
-			year, month = displayMonth(ui)
+			year, month, day = displayMonth(ui)
 			if year == 0: return 0
 			day = int(re.findall(r'(\d+)</font>', ui.labInfo.text())[0])  # 公历日期
 			if day > days[month]: day = days[month]  # 跳到上月底
@@ -247,10 +249,15 @@ def displayDate(ui):
 			else:   # 跳转前后月
 				if day > 20: lastMonth(ui)
 				else: nextMonth(ui)
-				year, month = displayMonth(ui)  # 更新月历
+				year, month = displayMonth(ui)[:2]  # 更新月历
 				borderDate(ui, month, day)
 	# 日期相关显示信息
 	jdn = math.floor(ephem.julian_date((year, month + 1, day)) + 8/24 + 0.5)
+	jdn0 = math.floor(ephem.julian_date(time.localtime(time.time())[0:3]) + 8 / 24 + 0.5)
+	difference = jdn - jdn0
+	if difference > 0: difference = '距今：' + str(abs(difference)) + '天后'
+	elif difference == 0: difference = ''
+	else: difference = '距今：' + str(abs(difference)) + '天前'
 	week = weeks[math.floor(jdn % 7)]
 	ym, rq, JD, jqrq = dateInfo[day-dateInfo[0][0]][1:]
 	nian = year
@@ -265,6 +272,8 @@ def displayDate(ui):
 	if day >= jqr: ygz = gz[(year * 12 + 13 + month) % 60]
 	else: ygz = gz[(year * 12 + 12 + month) % 60]
 	rgz = gz[math.floor(JD + 8/24 + 0.5 + 49) % 60]
-	ui.labInfo.setText("JDN {}<br/><br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
-		jdn, nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))  # JDN、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
+	# JDN、距今、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
+	ui.labInfo.setText("JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
+		jdn, font(difference, 12, "black"), nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))
+
 
