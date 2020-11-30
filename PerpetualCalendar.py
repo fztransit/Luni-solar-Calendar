@@ -105,17 +105,25 @@ def getSolorTerms(year):
 	return jqb  # [[日序， 节气序] * n]
 
 
-def getFestival(m, d, sl):
-	if sl == 0:  # 公历节日
-		festivals = scfestivals
-	else:  # 农历节日
-		if d == m: d = '初一'
-		festivals = lcfestivals
+def setNYE(festival, ymb, shuoJD):  # 重设节日日期
+	yx = ymb.index('十二月')
+	if DateDiffer(shuoJD[yx + 1], shuoJD[yx]) == 29:
+		festival[1] = '廿九'
+	else:
+		festival[1] = '三十'
+	return festival
 
-	for i in range(len(festivals)):
-		if m == festivals[i][0] and d == festivals[i][1]:
-			return festivals[i][2]
-	return False
+
+def jumpLCF(currentFes, ymb, shuoJD):  # 节日农历月转公历月
+	for festival in lcfestivals:
+		if currentFes == festival[2]:
+			if festival[2] == '除夕': festival = setNYE(festival, ymb, shuoJD)
+			month2 = ymb.index(festival[0])
+			shuo = shuoJD[month2]
+			month, day = JD2date(shuo, 8).triple()[1:]
+			if int(day) + nlrq.index(festival[1]) <= days[month-1]: month -= 1
+			if month > 11: month -= 12
+			return month
 
 
 def getYearMonth(ui, wheel=0): # 根据输入重设年月
@@ -138,7 +146,8 @@ def getYearMonth(ui, wheel=0): # 根据输入重设年月
 		ui.cblYear.clear()
 		if wheel == 0: ui.cblYear.setCurrentText(edit)
 		else: ui.cblYear.setCurrentText(str(year))
-	month = ui.cblMonth.currentIndex()
+	if ui.sender() == ui.cblFindFestival: month = -1
+	else: month = ui.cblMonth.currentIndex()
 	return year, month
 
 
@@ -150,70 +159,91 @@ def displayMonth(ui):
 		ymb1, shuoJD1 = LunarCalendar(year + 1)
 		ymb = ymb[:-2] + ymb1[:2]
 		shuoJD = shuoJD[:-2] + shuoJD1[:3]
+	currentFes, fesDay = '', 0
+	if ui.sender() == ui.cblFindFestival:
+		currentFes = ui.cblFindFestival.currentText()
+		month = jumpLCF(currentFes, ymb, shuoJD)
+		ui.cblMonth.setCurrentIndex(month)
 	jqb = getSolorTerms(year)
 	days[1] = 29 if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0 else 28
-	fesDay = 0
-	flag = True
-	for i in range(12):
-		if i == month:
-			ysJD = ephem.julian_date((year, i + 1))
-			szy = findSZY(ysJD, shuoJD)  # 每月1日对应的农历月
-			ysRQ = DateDiffer(ysJD, shuoJD[szy])  # 每月1日的农历日期
-			yue0 = DateDiffer(shuoJD[szy + 1], shuoJD[szy])
-			yue1 = DateDiffer(shuoJD[szy + 2], shuoJD[szy + 1])
-			blank = int((ysJD + 0.5) % 7)
-			for j in range(6):
-				for k in range(7):
-					# 计算日期
-					day = j * 7 + k - blank + 1
-					rqx = ysRQ + (j+1) * 7 - 7 + k - blank
-					if rqx < 0:  # 月首日所在农历月上月
-						yue = DateDiffer(shuoJD[szy], shuoJD[szy - 1])
-						rq = nlrq[rqx % yue]
-						yx = szy - 1
-					elif 0 <= rqx < yue0:
-						rq = nlrq[rqx]
-						yx = szy
-					elif yue0 <= rqx < yue0 + yue1:
-						rq = nlrq[rqx - yue0]
-						yx = szy + 1
-					elif rqx >= yue0 + yue1:
-						rq = nlrq[rqx - yue0 - yue1]
-						yx = szy + 2
-					dateInfo[j * 7 + k] = [day, ymb[yx], rq, ysJD+day-1, jqb[i]]
-					if year == 1582 and i == 9: dateInfo[j * 7 + k][-1] = [jqb[i][0], jqb[i-1][1]]  # 该月无节气，月干支序从上月获取
-					if rq == '初一': rq = ymb[yx]
-					# 显示月历
-					if j == 0 and k < blank:  # 上月
-						ui.labs[j][k].setText(font(days[i-1]-blank+k+1, 20) + font(rq))
-					else:  # 本月
-						if day <= days[i]:
-							if year == 1582 and i == 9 and day > 4:
-								if day < 15: continue
-								else: ui.labs[j+(k-10)//7][k-3].setText(font(day, 20, "black", 800) + font(rq))
-							else:
-								ui.labs[j][k].setText(font(day, 20, "black", 800) + font(rq))  # "500;font-family:微软雅黑"
-						else:  # 次月
-							if year == 1582 and i == 9:
-								ui.labs[j+(k-10)//7][k-3].setText(font(day - days[i], 20) + font(rq))
-								if day - days[i] == 11:
-									for m in range(10): ui.labs[j-1+(m+k-2)//7][(m+k-2)%7].setText("")
-							else: ui.labs[j][k].setText(font(day-days[i], 20) + font(rq))
-					# 显示节日
-					if 0 < day <= days[i]:  # 只标注本月内
-						qmDay = -99
-						for m in range(len(jqb[i])):  # 节气
-							if day == jqb[i][m][0]:
-								if year == 1582 and i == 9: ui.labs[j+(k-10)//7][k-3].setText(font(day, 20, "black", 800) + font(jieqi[jqb[i][m][1]], 12, "red"))
-								else: ui.labs[j][k].setText(font(day, 20, "black", 800) + font(jieqi[jqb[i][m][1]], 12, "red"))
-							if jqb[i][m][1] == 7: qmDay = jqb[i][m][0]
-						if year >= 1949:  # 公历节日起始年
-							if day == qmDay: ui.labs[j][k].setText(font(day, 20, "red", 800) + font("清明", 12, "red"))
-							fes = getFestival(month + 1, day, 0)
-							if fes: ui.labs[j][k].setText(font(day, 20, "red", 800) + font(fes, 12, "red"))
-						if year > 1911:  # 农历节日起始年
-							fes = getFestival(ymb[yx], rq, 1)
-							if fes:	ui.labs[j][k].setText(font(day, 20, "red", 800) + font(fes, 12, "red"))
+	i = month
+	ysJD = ephem.julian_date((year, i + 1))
+	szy = findSZY(ysJD, shuoJD)  # 每月1日对应的农历月
+	ysRQ = DateDiffer(ysJD, shuoJD[szy])  # 每月1日的农历日期
+	yue0 = DateDiffer(shuoJD[szy + 1], shuoJD[szy])
+	yue1 = DateDiffer(shuoJD[szy + 2], shuoJD[szy + 1])
+	blank = int((ysJD + 0.5) % 7)
+	for j in range(6):
+		for k in range(7):
+			# 计算日期
+			day = j * 7 + k - blank + 1
+			rqx = ysRQ + (j+1) * 7 - 7 + k - blank
+			if rqx < 0:  # 月首日所在农历月上月
+				yue = DateDiffer(shuoJD[szy], shuoJD[szy - 1])
+				rq = nlrq[rqx % yue]
+				yx = szy - 1
+			elif 0 <= rqx < yue0:
+				rq = nlrq[rqx]
+				yx = szy
+			elif yue0 <= rqx < yue0 + yue1:
+				rq = nlrq[rqx - yue0]
+				yx = szy + 1
+			elif rqx >= yue0 + yue1:
+				rq = nlrq[rqx - yue0 - yue1]
+				yx = szy + 2
+			if day == 1:
+				yx1 = yx
+				rq1 = rq
+			if day == days[i]:
+				yx2 = yx
+				rq2 = rq
+			dateInfo[j * 7 + k] = [day, ymb[yx], rq, ysJD+day-1, jqb[i]]
+			if year == 1582 and i == 9: dateInfo[j * 7 + k][-1] = [jqb[i][0], jqb[i-1][1]]  # 该月无节气，月干支序从上月获取
+			if rq == '初一': rq = ymb[yx]
+			# 显示月历
+			if j == 0 and k < blank:  # 上月
+				ui.labs[j][k].setText(font(days[i-1]-blank+k+1, 20) + font(rq))
+			else:  # 本月
+				if day <= days[i]:
+					if year == 1582 and i == 9 and day > 4:
+						if day < 15: continue
+						else: ui.labs[j+(k-10)//7][k-3].setText(font(day, 20, "black", 800) + font(rq))
+					else:
+						ui.labs[j][k].setText(font(day, 20, "black", 800) + font(rq))  # "500;font-family:微软雅黑"
+				else:  # 次月
+					if year == 1582 and i == 9:
+						ui.labs[j+(k-10)//7][k-3].setText(font(day - days[i], 20) + font(rq))
+						if day - days[i] == 11:
+							for m in range(10): ui.labs[j-1+(m+k-2)//7][(m+k-2)%7].setText("")
+					else: ui.labs[j][k].setText(font(day-days[i], 20) + font(rq))
+	# 显示节日
+	qmDay = 0
+	for jq in jqb[i]:  # 节气
+		jqrx = jq[0] + blank - 1
+		if year == 1582 and i == 9: jqrx -= 10
+		ui.labs[jqrx//7][jqrx%7].setText(font(jq[0], 20, "black", 800) + font(jieqi[jq[1]], 12, "red"))
+		if jq[1] == 7: qmDay = jq[0]
+	if year >= 1949:  # 公历节日起始年
+		if qmDay: ui.labs[(qmDay+blank-1)//7][(qmDay+blank-1)%7].setText(font(qmDay, 20, "red", 800) + font("清明", 12, "red"))
+		for fes in scfestivals:
+			if fes[0] == month + 1:
+				jqrx = fes[1] + blank - 1
+				ui.labs[jqrx // 7][jqrx % 7].setText(font(fes[1], 20, "red", 800) + font(fes[2], 12, "red"))
+	if year > 1911:  # 农历节日起始年
+		rqx1 = nlrq.index(rq1)
+		for fes in lcfestivals:
+			if fes[2] == '除夕': fes = setNYE(fes, ymb, shuoJD)
+			jqrx = nlrq.index(fes[1])
+			if fes[0] == ymb[yx1] and jqrx >= rqx1:  # 该月农历首日
+				jqrx += -rqx1 + blank
+				ui.labs[jqrx // 7][jqrx % 7].setText(font(jqrx-blank+1, 20, "red", 800) + font(fes[2], 12, "red"))
+			elif fes[0] == ymb[yx1+1] and jqrx <= nlrq.index(rq2):  # 该月农历末日
+				jqrx += DateDiffer(shuoJD[yx1 + 1], shuoJD[yx1]) - rqx1 + blank
+				ui.labs[jqrx // 7][jqrx % 7].setText(font(jqrx - blank + 1, 20, "red", 800) + font(fes[2], 12, "red"))
+			elif yx2 - yx1 == 2 and fes[0] == ymb[yx2]:  # 跨2月
+				jqrx += DateDiffer(shuoJD[yx1 + 2], shuoJD[yx1]) - rqx1 + blank
+				if 0 < jqrx <= days[i] + blank: ui.labs[jqrx // 7][jqrx % 7].setText(font(jqrx - blank + 1, 20, "red", 800) + font(fes[2], 12, "red"))
+			if fes[2] == currentFes: fesDay = jqrx - blank + 1
 	return year, month, fesDay
 
 
@@ -232,10 +262,10 @@ def displayDate(ui):
 		displayMonth(ui)
 		borderDate(ui, month, day)
 	else:
-		if ui.sender() in [ui.cblCentury, ui.cblYear, ui.cblMonth, ui.btnLastMonth, ui.btnNextMonth, ui.btnLastYear, ui.btnNextYear]:  # 设为原公历日
+		if ui.sender() in [ui.cblCentury, ui.cblYear, ui.cblMonth, ui.btnLastMonth, ui.btnNextMonth, ui.btnLastYear, ui.btnNextYear, ui.cblFindFestival]:  # 设为原公历日
 			year, month, day = displayMonth(ui)
 			if year == 0: return 0
-			day = int(re.findall(r'(\d+)</font>', ui.labInfo.text())[0])  # 公历日期
+			if ui.sender() != ui.cblFindFestival: day = int(re.findall(r'(\d+)</font>', ui.labInfo.text())[0])  # 公历日期
 			if day > days[month]: day = days[month]  # 跳到上月底
 			borderDate(ui, month, day)
 		else:  # 点击日期跳转
@@ -273,7 +303,7 @@ def displayDate(ui):
 	else: ygz = gz[(year * 12 + 12 + month) % 60]
 	rgz = gz[math.floor(JD + 8/24 + 0.5 + 49) % 60]
 	# JDN、距今、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
-	ui.labInfo.setText("JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
+	ui.labInfo.setText("<br/>JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
 		jdn, font(difference, 12, "black"), nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))
 
 

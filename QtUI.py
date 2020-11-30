@@ -101,13 +101,23 @@ class GUI(QMainWindow):
 				self.labs[i][j].setFixedSize(48, 48)
 				self.labs[i][j].clicked.connect(lambda : displayDate(self))
 				self.gridWNL.addWidget(self.labs[i][j], i + 2, j)
+		self.cblFindFestival = QComboBox()
+		self.cblFindFestival.addItem('查找农历节日')
+		for festival in lcfestivals:
+			self.cblFindFestival.addItem(festival[-1])
+		self.cblFindFestival.activated.connect(self.thisJumpFestival)
+		self.cblFindFestival.setStyleSheet("QComboBox { leftPadding: 1px }")
+		self.cblFindFestival.setMaximumWidth(100)
+		self.hlayGL = QHBoxLayout()
+		self.hlayGL.addWidget(self.cblFindFestival)
 		self.labInfo = QLabel()
-		self.labInfo.setStyleSheet("QLabel{ font:14px; }")
+		self.labInfo.setStyleSheet("QLabel{ font:14px;}")
 		self.labInfo.setAlignment(Qt.AlignHCenter)
 		self.labInfo.setContentsMargins(0, 6, 5, 6)
 		self.labInfo.setWordWrap(True)
 		self.labInfo.setFixedWidth(120)
-		self.gridWNL.addWidget(self.labInfo, 0, 7, 8, 1)
+		self.gridWNL.addLayout(self.hlayGL, 0, 7, 1, 1)
+		self.gridWNL.addWidget(self.labInfo, 1, 7, 7, 1)
 
 	def thisJumpMonth(self):
 		if self.sender() == self.btnLastMonth:
@@ -119,3 +129,7 @@ class GUI(QMainWindow):
 		elif self.sender() == self.btnNextYear:
 			nextYear(self)
 		displayDate(self)
+
+	def thisJumpFestival(self):
+		if self.cblFindFestival.currentText() != '查找农历节日':
+			displayDate(self)
