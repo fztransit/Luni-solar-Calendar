@@ -106,7 +106,7 @@ def getSolorTerms(year):
 
 
 def setNYE(festival, ymb, shuoJD):  # 重设节日日期
-	yx = ymb.index('十二月')
+	yx = ymb.index(festival[0])
 	if DateDiffer(shuoJD[yx + 1], shuoJD[yx]) == 29:
 		festival[1] = '廿九'
 	else:
