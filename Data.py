@@ -16,6 +16,7 @@ weeks = ['一', '二', '三', '四', '五', '六', '日']
 days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 dateInfo = [[]] * 42
 selected = None
+setYear = ''
 startCentury = -13
 endCentury = 30
 start_century = startCentury if startCentury <= 0 else startCentury - 1

@@ -14,4 +14,7 @@ pip install re
 由于清明节日期不定，已单独处理，勿在列表中添加。
 程序中已处理设置节日，无需另行处理。
 
+程序加了搜索农历节日，如果无需可自行删除相关代码。包括：
+QtUI文件中self.cblFindFestival相关
+PerpetualCalendar文件中jumpLCF函数及ui.cblFindFestival相关
 

@@ -148,13 +148,25 @@ def getYearMonth(ui, wheel=0): # 根据输入重设年月
 		else: ui.cblYear.setCurrentText(str(year))
 	if ui.sender() == ui.cblFindFestival: month = -1
 	else: month = ui.cblMonth.currentIndex()
+	global setYear
+	if year != setYear or setYear == '':
+		setYear = year
+		updateYear()
 	return year, month
+
+
+def updateYear():
+	global yearYMB, yearSJD, yearST
+	yearYMB, yearSJD = LunarCalendar(setYear, 0)
+	yearST = getSolorTerms(setYear)
 
 
 def displayMonth(ui):
 	year, month = getYearMonth(ui)
 	if year == 0: return 0, 0
-	ymb, shuoJD = LunarCalendar(year, 0)
+	ymb, shuoJD, jqb = yearYMB, yearSJD, yearST
+	# ymb, shuoJD = LunarCalendar(year, 0)
+	# jqb = getSolorTerms(year)
 	if DateCompare(ephem.julian_date((year, 12, 31)), shuoJD[-2] + 29):
 		ymb1, shuoJD1 = LunarCalendar(year + 1)
 		ymb = ymb[:-2] + ymb1[:2]
@@ -164,7 +176,6 @@ def displayMonth(ui):
 		currentFes = ui.cblFindFestival.currentText()
 		month = jumpLCF(currentFes, ymb, shuoJD)
 		ui.cblMonth.setCurrentIndex(month)
-	jqb = getSolorTerms(year)
 	days[1] = 29 if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0 else 28
 	i = month
 	ysJD = ephem.julian_date((year, i + 1))
@@ -286,7 +297,7 @@ def displayDate(ui):
 	jdn0 = math.floor(ephem.julian_date(time.localtime(time.time())[0:3]) + 8 / 24 + 0.5)
 	difference = jdn - jdn0
 	if difference > 0: difference = '距今：' + str(abs(difference)) + '天后'
-	elif difference == 0: difference = ''
+	elif difference == 0: difference = '今天'
 	else: difference = '距今：' + str(abs(difference)) + '天前'
 	week = weeks[math.floor(jdn % 7)]
 	ym, rq, JD, jqrq = dateInfo[day-dateInfo[0][0]][1:]
@@ -303,7 +314,7 @@ def displayDate(ui):
 	else: ygz = gz[(year * 12 + 12 + month) % 60]
 	rgz = gz[math.floor(JD + 8/24 + 0.5 + 49) % 60]
 	# JDN、距今、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
-	ui.labInfo.setText("<br/>JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 【{}】<br/>{}月 {}日<br/><br/>".format(
+	ui.labInfo.setText("<br/>JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 〖{}〗<br/>{}月 {}日<br/><br/>".format(
 		jdn, font(difference, 12, "black"), nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))
 
 
