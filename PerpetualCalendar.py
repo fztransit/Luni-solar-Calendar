@@ -302,8 +302,9 @@ def displayDate(ui):
 	week = weeks[math.floor(jdn % 7)]
 	ym, rq, JD, jqrq = dateInfo[day-dateInfo[0][0]][1:]
 	nian = year
-	if month < 2 and yuefen.index(ym.split('闰')[-1]) > 10: nian -= 1
-	ngz = gz[(nian - 4) % 60]
+	if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
+	if nian < 0: ngz = gz[(nian - 3) % 60]
+	else: ngz = gz[(nian - 4) % 60]
 	nm = gyjn(year)
 	sxm = zodiac[(nian - 4) % 12]
 	if year < 0: year += 1
