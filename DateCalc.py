@@ -7,6 +7,7 @@ def JD2date(JD, ut=0):
 
 
 def EquinoxSolsticeJD(year, angle):
+	angle %= 360
 	if 0 <= angle < 90:
 		date = ephem.next_vernal_equinox(year)
 	elif 90 <= angle < 180:
@@ -28,11 +29,14 @@ def SolarLongitube(JD):
 	L = se.lon / ephem.degree / 180 * math.pi
 	return L
 
-def SolarTerms(year, angle, year0=''):  # year0：欲求值
+
+def SolarTerms(year, angle, year0=''):  # year0：只计算该年节气，不设则计算结果可能不在所求年
+	if angle > 270: year -= 1
 	JD = EquinoxSolsticeJD(str(year), angle)  # 初值
-	year1 = JD2date(JD, 8).triple()[0]
+	date = JD2date(JD, 8)
+	year1 = date.triple()[0]
 	if year0 != '' and year1 != year0:  # 非该年值，从另一个节气迭代
-		JD = EquinoxSolsticeJD(str(year0), (angle + 90) % 360)
+		JD = EquinoxSolsticeJD(str(year + 1), (angle + 90) % 360)
 	JD1 = JD
 	while True:
 		JD2 = JD1
@@ -96,7 +100,7 @@ def LunarCalendar(nian, type=1):   # type=1时截止到次年冬至朔，=0时�
 		shuoJD.append(ephem.julian_date(shuo))
 		# 查找本月中气，若无则置闰
 		if j == 0: continue  # 冬至月一定含中气，从次月开始查找
-		angle = (-90 + 30 * i) % 360  # 本月应含中气，起冬至
+		angle = (-90 + 30 * i) % 360  # 本月应含中气，起冬至（不计）
 		qJD = SolarTerms(nian, angle)
 		# 不判断气在上月而后气在后月的情况，该月起的合朔次数不超过气数，可省去
 		if DateCompare(qJD, shuoJD[j+1]) and flag == False:  # 中气在次月，则本月无中气

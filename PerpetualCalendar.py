@@ -95,12 +95,12 @@ def jumpMonth(ui):
 def getSolorTerms(year):
 	jqb = [[i] for i in range(12)]  # [月序，[日序， 节气序] * n]
 	for i in range(24):
-		jq = JD2date(SolarTerms(year, i * 15), 8)
+		jq = JD2date(SolarTerms(year, i * 15, year), 8)
 		jqn, jqy, jqr = jq.triple()
 		if jqn != year:
 			jq = JD2date(SolarTerms(year + (year - jqn), i * 15, year), 8)
 			jqn, jqy, jqr = jq.triple()
-		if jqn == year:
+		if jqn == year:  # 部分年无某节气，如BC1243年无冬至
 			jqb[jqy-1].append([int(jqr), (i + 6) % 24])  # 按月存储
 	for j in range(len(jqb)): jqb[j].pop(0)
 	return jqb  # [[日序， 节气序] * n]
