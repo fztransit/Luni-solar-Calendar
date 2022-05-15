@@ -96,8 +96,6 @@ def getSolorTerms(year):
 	jqb = [[i] for i in range(12)]  # [月序，[日序， 节气序] * n]
 	jqb2 = [[i] for i in range(12)]
 	for i in range(24):
-		if i * 15 == 285:
-			x=0
 		jq = JD2date(SolarTerms(year, i * 15), 8)
 		jqn, jqy, jqr = jq.triple()
 		if jqn != year:
