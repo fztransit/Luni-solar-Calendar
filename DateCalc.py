@@ -31,8 +31,8 @@ def SolarLongitube(JD):
 def SolarTerms(year, angle, year0=''):  # year0：欲求值
 	JD = EquinoxSolsticeJD(str(year), angle)  # 初值
 	year1 = JD2date(JD, 8).triple()[0]
-	if year1 != year0: # 非该年值，从另一个节气迭代
-		JD = EquinoxSolsticeJD(str(year), (angle + 90) % 360)
+	if year0 != '' and year1 != year0:  # 非该年值，从另一个节气迭代
+		JD = EquinoxSolsticeJD(str(year0), (angle + 90) % 360)
 	JD1 = JD
 	while True:
 		JD2 = JD1
