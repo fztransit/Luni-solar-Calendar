@@ -17,5 +17,6 @@ pip install re
 
 程序加了搜索农历节日，如果无需可自行删除相关代码。包括：
 QtUI文件中self.cblFindFestival相关
-PerpetualCalendar文件中jumpLCF函数及ui.cblFindFestival相关
+PerpetualCalendar.py文件中jumpLCF函数及ui.cblFindFestival相关
 
+PerpetualCalendar.py文件第306-311行是使用节气纪年的方法（即一年从立春开始），312行是使用阴历月纪年的方法（即一年从正月初一开始）。默认使用后一种，故306-311行被注释掉。如需使用节气纪年，则将306-311行的注释撤销，并将312行注释掉。
