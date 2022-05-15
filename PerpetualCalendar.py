@@ -311,7 +311,7 @@ def displayDate(ui):
 	# 	if jqrq[i][1] == 3 and day < jqrq[i][0]: count2 -= 1
 	# if count1 == 0: nian -= 1  # 该月所有节气在立春前
 	# elif count2 != len(jqrq): nian -= 1  # 立春所在月
-	# if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
+	if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
 	if nian < 0: ngz = gz[(nian - 3) % 60]
 	else: ngz = gz[(nian - 4) % 60]
 	nm = gyjn(year)
