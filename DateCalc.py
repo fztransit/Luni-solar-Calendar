@@ -28,14 +28,11 @@ def SolarLongitube(JD):
 	L = se.lon / ephem.degree / 180 * math.pi
 	return L
 
-def SolarTerms(year, angle):
-	if angle > 270: year -= 1  # 岁首冬至
-	if year == 0: year -= 1  # 公元0改为公元前1
+def SolarTerms(year, angle, year0=''):  # year0：欲求值
 	JD = EquinoxSolsticeJD(str(year), angle)  # 初值
-	if angle >= 270:
-		JD0 = EquinoxSolsticeJD(str(year), (angle - 90) % 360)
-		if JD < JD0: # 非年末冬至
-			JD = EquinoxSolsticeJD(str(year+1), angle)  # 转入次年
+	year1 = JD2date(JD, 8).triple()[0]
+	if year1 != year0: # 非该年值，从另一个节气迭代
+		JD = EquinoxSolsticeJD(str(year), (angle + 90) % 360)
 	JD1 = JD
 	while True:
 		JD2 = JD1

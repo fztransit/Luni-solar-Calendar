@@ -94,14 +94,18 @@ def jumpMonth(ui):
 
 def getSolorTerms(year):
 	jqb = [[i] for i in range(12)]  # [月序，[日序， 节气序] * n]
+	jqb2 = [[i] for i in range(12)]
 	for i in range(24):
+		if i * 15 == 285:
+			x=0
 		jq = JD2date(SolarTerms(year, i * 15), 8)
 		jqn, jqy, jqr = jq.triple()
 		if jqn != year:
-			jq = JD2date(SolarTerms(year + (year - jqn), i * 15), 8)
+			jq = JD2date(SolarTerms(year + (year - jqn), i * 15, year), 8)
 			jqn, jqy, jqr = jq.triple()
 		if jqn == year:
 			jqb[jqy-1].append([int(jqr), (i + 6) % 24])  # 按月存储
+			jqb2[jqy-1].append(str(jq))
 	for j in range(len(jqb)): jqb[j].pop(0)
 	return jqb  # [[日序， 节气序] * n]
 
@@ -164,10 +168,8 @@ def updateYear():
 
 def displayMonth(ui):
 	year, month = getYearMonth(ui)
-	if year == 0: return 0, 0
+	if year == 0: return 0, 0, 0
 	ymb, shuoJD, jqb = yearYMB, yearSJD, yearST
-	# ymb, shuoJD = LunarCalendar(year, 0)
-	# jqb = getSolorTerms(year)
 	if DateCompare(ephem.julian_date((year, 12, 31)), shuoJD[-2] + 29):
 		ymb1, shuoJD1 = LunarCalendar(year + 1)
 		ymb = ymb[:-2] + ymb1[:2]
@@ -303,7 +305,13 @@ def displayDate(ui):
 	week = weeks[math.floor(jdn % 7)]
 	ym, rq, JD, jqrq = dateInfo[day-dateInfo[0][0]][1:]
 	nian = year
-	if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
+	# count1 = count2 = len(jqrq)
+	# for i in range(count1):
+	# 	if jqrq[i][1] < 3: count1 -= 1
+	# 	if jqrq[i][1] == 3 and day < jqrq[i][0]: count2 -= 1
+	# if count1 == 0: nian -= 1  # 该月所有节气在立春前
+	# elif count2 != len(jqrq): nian -= 1  # 立春所在月
+	# if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
 	if nian < 0: ngz = gz[(nian - 3) % 60]
 	else: ngz = gz[(nian - 4) % 60]
 	nm = gyjn(year)
@@ -318,5 +326,3 @@ def displayDate(ui):
 	# JDN、距今、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
 	ui.labInfo.setText("<br/>JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 〖{}〗<br/>{}月 {}日<br/><br/>".format(
 		jdn, font(difference, 12, "black"), nm, month+1, week, font(day, 50, "black"), font(ym+rq, 17, "black"), ngz, sxm, ygz, rgz))
-
-
