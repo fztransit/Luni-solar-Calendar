@@ -176,6 +176,7 @@ def displayMonth(ui):
 		month = jumpLCF(currentFes, ymb, shuoJD)
 		ui.cblMonth.setCurrentIndex(month)
 	days[1] = 29 if (year % 4 == 0 and year % 100 != 0) or year % 400 == 0 else 28
+	if year < 1582 and year % 4 == 0: days[1] = 29
 	i = month
 	ysJD = ephem.julian_date((year, i + 1))
 	szy = findSZY(ysJD, shuoJD)  # 每月1日对应的农历月
