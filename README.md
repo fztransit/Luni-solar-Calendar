@@ -20,3 +20,5 @@ QtUI文件中self.cblFindFestival相关
 PerpetualCalendar.py文件中jumpLCF函数及ui.cblFindFestival相关
 
 PerpetualCalendar.py文件第305-310行是使用节气纪年的方法（即一年从立春开始），311行是使用阴历月纪年的方法（即一年从正月初一开始）。默认使用后一种，故305-310行被注释掉。如需使用节气纪年，则将305-310行的注释撤销，并将311行注释掉。
+
+基本计算方法见本项目wiki。
