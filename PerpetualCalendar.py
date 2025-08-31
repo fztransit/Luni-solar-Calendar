@@ -308,17 +308,20 @@ def displayDate(ui):
 	# 	if jqrq[i][1] == 3 and day < jqrq[i][0]: count2 -= 1
 	# if count1 == 0: nian -= 1  # 该月所有节气在立春前
 	# elif count2 != len(jqrq): nian -= 1  # 立春所在月
-	if month < 3 and yuefen.index(ym.split('闰')[-1]) >= 10: nian -= 1
+	yx = yuefen.index(ym.replace('闰', ''))
+	if month < 3 and yx >= 10: nian -= 1
 	if nian < 0: ngz = gz[(nian - 3) % 60]
 	else: ngz = gz[(nian - 4) % 60]
 	nm = gyjn(year)
 	sxm = zodiac[(nian - 4) % 12]
-	if year < 0: year += 1
-	jqr = 99
-	for i in range(len(jqrq)):
-		if jqrq[i][1] % 2 == 1: jqr = jqrq[i][0]
-	if day >= jqr: ygz = gz[(year * 12 + 13 + month) % 60]
-	else: ygz = gz[(year * 12 + 12 + month) % 60]
+	if nian < 0: ygz = tiangan[(6+nian*12+yx)%10] + dizhi[(yx+2)%12]
+	else: ygz = tiangan[(4+nian*12+yx)%10] + dizhi[(yx+2)%12]
+	# if year < 0: year += 1
+	# jqr = 99
+	# for i in range(len(jqrq)):
+	# 	if jqrq[i][1] % 2 == 1: jqr = jqrq[i][0]
+	# if day >= jqr: ygz = gz[(year * 12 + 13 + month) % 60]
+	# else: ygz = gz[(year * 12 + 12 + month) % 60]
 	rgz = gz[math.floor(JD + 8/24 + 0.5 + 49) % 60]
 	# JDN、距今、年名、月、星期、日、农历月日、年干支、生肖名、月干支、日干支
 	ui.labInfo.setText("<br/>JDN {}<br/>{}<br/>{}<br/>{}月 星期{}<br/>{}{}{}年 〖{}〗<br/>{}月 {}日<br/><br/>".format(
